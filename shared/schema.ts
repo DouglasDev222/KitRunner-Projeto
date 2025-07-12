@@ -19,11 +19,24 @@ export const customers = pgTable("customers", {
   name: text("name").notNull(),
   cpf: text("cpf").notNull().unique(),
   birthDate: text("birth_date").notNull(),
-  address: text("address").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const addresses = pgTable("addresses", {
+  id: serial("id").primaryKey(),
+  customerId: integer("customer_id").notNull().references(() => customers.id),
+  label: text("label").notNull(), // "casa", "trabalho", etc.
+  street: text("street").notNull(),
+  number: text("number").notNull(),
+  complement: text("complement"),
   neighborhood: text("neighborhood").notNull(),
   city: text("city").notNull(),
-  state: text("state").notNull(),
+  state: text("state").notNull().default("PB"),
   zipCode: text("zip_code").notNull(),
+  isDefault: boolean("is_default").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const kits = pgTable("kits", {
@@ -39,6 +52,7 @@ export const orders = pgTable("orders", {
   orderNumber: text("order_number").notNull().unique(),
   eventId: integer("event_id").notNull(),
   customerId: integer("customer_id").notNull(),
+  addressId: integer("address_id").notNull().references(() => addresses.id),
   kitQuantity: integer("kit_quantity").notNull(),
   baseCost: decimal("base_cost", { precision: 10, scale: 2 }).notNull(),
   additionalCost: decimal("additional_cost", { precision: 10, scale: 2 }).notNull().default("0"),
@@ -54,6 +68,12 @@ export const insertEventSchema = createInsertSchema(events).omit({
 
 export const insertCustomerSchema = createInsertSchema(customers).omit({
   id: true,
+  createdAt: true,
+});
+
+export const insertAddressSchema = createInsertSchema(addresses).omit({
+  id: true,
+  createdAt: true,
 });
 
 export const insertKitSchema = createInsertSchema(kits).omit({
@@ -71,17 +91,37 @@ export const customerIdentificationSchema = z.object({
   birthDate: z.string().min(1, "Data de nascimento é obrigatória"),
 });
 
+export const addressSchema = z.object({
+  label: z.string().min(1, "Rótulo é obrigatório"),
+  street: z.string().min(1, "Rua é obrigatória"),
+  number: z.string().min(1, "Número é obrigatório"),
+  complement: z.string().optional(),
+  neighborhood: z.string().min(1, "Bairro é obrigatório"),
+  city: z.string().min(1, "Cidade é obrigatória"),
+  state: z.string().default("PB"),
+  zipCode: z.string().min(8, "CEP deve ter 8 dígitos"),
+  isDefault: z.boolean().default(false),
+});
+
+export const customerRegistrationSchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório"),
+  cpf: z.string().min(11, "CPF deve ter 11 dígitos"),
+  birthDate: z.string().min(1, "Data de nascimento é obrigatória"),
+  email: z.string().email("Email inválido"),
+  phone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
+  addresses: z.array(addressSchema).min(1, "Pelo menos um endereço é obrigatório"),
+});
+
 export const kitInformationSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   cpf: z.string().min(11, "CPF deve ter 11 dígitos"),
-  shirtSize: z.enum(["PP", "P", "M", "G", "GG", "XGG"], {
-    required_error: "Tamanho da camiseta é obrigatório",
-  }),
+  shirtSize: z.string().min(1, "Tamanho da camiseta é obrigatório"),
 });
 
 export const orderCreationSchema = z.object({
   eventId: z.number(),
   customerId: z.number(),
+  addressId: z.number(),
   kitQuantity: z.number().min(1).max(5),
   kits: z.array(kitInformationSchema),
   paymentMethod: z.enum(["credit", "debit", "pix"]),
@@ -91,10 +131,14 @@ export type Event = typeof events.$inferSelect;
 export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type Customer = typeof customers.$inferSelect;
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
+export type Address = typeof addresses.$inferSelect;
+export type InsertAddress = z.infer<typeof insertAddressSchema>;
 export type Kit = typeof kits.$inferSelect;
 export type InsertKit = z.infer<typeof insertKitSchema>;
 export type Order = typeof orders.$inferSelect;
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type CustomerIdentification = z.infer<typeof customerIdentificationSchema>;
+export type CustomerRegistration = z.infer<typeof customerRegistrationSchema>;
+export type AddressData = z.infer<typeof addressSchema>;
 export type KitInformation = z.infer<typeof kitInformationSchema>;
 export type OrderCreation = z.infer<typeof orderCreationSchema>;

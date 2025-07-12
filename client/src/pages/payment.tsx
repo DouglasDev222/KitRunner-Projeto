@@ -11,7 +11,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/brazilian-formatter";
 import { apiRequest } from "@/lib/queryClient";
-import type { Customer, Event, OrderCreation } from "@shared/schema";
+import type { Customer, Event, OrderCreation, Address } from "@shared/schema";
 
 export default function Payment() {
   const [, setLocation] = useLocation();
@@ -19,6 +19,7 @@ export default function Payment() {
   const [paymentMethod, setPaymentMethod] = useState<"credit" | "debit" | "pix">("credit");
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [kitData, setKitData] = useState<any>(null);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
 
   const { data: event } = useQuery<Event>({
     queryKey: ["/api/events", id],
@@ -27,6 +28,7 @@ export default function Payment() {
   useEffect(() => {
     const customerData = sessionStorage.getItem("customerData");
     const kitInfo = sessionStorage.getItem("kitData");
+    const addressData = sessionStorage.getItem("selectedAddress");
     
     if (customerData) {
       setCustomer(JSON.parse(customerData));
@@ -34,8 +36,11 @@ export default function Payment() {
     if (kitInfo) {
       setKitData(JSON.parse(kitInfo));
     }
+    if (addressData) {
+      setSelectedAddress(JSON.parse(addressData));
+    }
     
-    if (!customerData || !kitInfo) {
+    if (!customerData || !kitInfo || !addressData) {
       setLocation(`/events/${id}/identify`);
     }
   }, [id, setLocation]);
@@ -69,9 +74,15 @@ export default function Payment() {
   const totalCost = baseCost + (extraKits * additionalKitCost);
 
   const handleFinishOrder = () => {
+    if (!selectedAddress) {
+      alert("Endereço não selecionado. Por favor, volte e selecione um endereço.");
+      return;
+    }
+    
     const orderData: OrderCreation = {
       eventId: parseInt(id!),
       customerId: customer.id,
+      addressId: selectedAddress.id,
       kitQuantity: kitData.kitQuantity,
       kits: kitData.kits,
       paymentMethod,
@@ -102,7 +113,9 @@ export default function Payment() {
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-600">Endereço:</span>
-                <span className="font-medium text-neutral-800">{customer.neighborhood}, {customer.city}</span>
+                <span className="font-medium text-neutral-800">
+                  {selectedAddress ? `${selectedAddress.neighborhood}, ${selectedAddress.city}` : "Endereço não selecionado"}
+                </span>
               </div>
               <div className="border-t pt-2 mt-3">
                 <div className="flex justify-between items-center">

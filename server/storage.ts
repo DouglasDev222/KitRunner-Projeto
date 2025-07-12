@@ -3,6 +3,8 @@ import {
   InsertEvent, 
   Customer, 
   InsertCustomer, 
+  Address,
+  InsertAddress,
   Kit, 
   InsertKit,
   Order,
@@ -10,6 +12,7 @@ import {
   CustomerIdentification,
   events,
   customers,
+  addresses,
   orders,
   kits
 } from "@shared/schema";
@@ -25,6 +28,12 @@ export interface IStorage {
   // Customers
   getCustomerByCredentials(cpf: string, birthDate: string): Promise<Customer | undefined>;
   createCustomer(customer: InsertCustomer): Promise<Customer>;
+
+  // Addresses
+  createAddress(address: InsertAddress): Promise<Address>;
+  getAddressesByCustomerId(customerId: number): Promise<Address[]>;
+  getAddress(id: number): Promise<Address | undefined>;
+  updateAddress(id: number, address: Partial<InsertAddress>): Promise<Address>;
 
   // Orders
   createOrder(order: InsertOrder): Promise<Order>;
@@ -69,6 +78,36 @@ export class DatabaseStorage implements IStorage {
       .values(insertCustomer)
       .returning();
     return customer;
+  }
+
+  async createAddress(insertAddress: InsertAddress): Promise<Address> {
+    const [address] = await db
+      .insert(addresses)
+      .values(insertAddress)
+      .returning();
+    return address;
+  }
+
+  async getAddressesByCustomerId(customerId: number): Promise<Address[]> {
+    const result = await db
+      .select()
+      .from(addresses)
+      .where(eq(addresses.customerId, customerId));
+    return result;
+  }
+
+  async getAddress(id: number): Promise<Address | undefined> {
+    const [address] = await db.select().from(addresses).where(eq(addresses.id, id));
+    return address || undefined;
+  }
+
+  async updateAddress(id: number, updateData: Partial<InsertAddress>): Promise<Address> {
+    const [address] = await db
+      .update(addresses)
+      .set(updateData)
+      .where(eq(addresses.id, id))
+      .returning();
+    return address;
   }
 
   async createOrder(insertOrder: InsertOrder): Promise<Order> {

@@ -142,21 +142,12 @@ export default function KitInformation() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Tamanho da Camiseta</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione o tamanho" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="PP">PP</SelectItem>
-                                <SelectItem value="P">P</SelectItem>
-                                <SelectItem value="M">M</SelectItem>
-                                <SelectItem value="G">G</SelectItem>
-                                <SelectItem value="GG">GG</SelectItem>
-                                <SelectItem value="XGG">XGG</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <FormControl>
+                              <Input
+                                placeholder="Ex: M, G, GG, XGG, etc."
+                                {...field}
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}

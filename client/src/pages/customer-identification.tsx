@@ -39,7 +39,12 @@ export default function CustomerIdentification() {
       setLocation(`/events/${id}/address`);
     },
     onError: (error: any) => {
-      setError(error.message || "Erro ao identificar cliente");
+      if (error.status === 404) {
+        // Show registration option if customer not found
+        setError("Cliente não encontrado. Você pode se cadastrar clicando em 'Novo Cadastro'.");
+      } else {
+        setError(error.message || "Erro ao identificar cliente");
+      }
     },
   });
 
@@ -132,6 +137,18 @@ export default function CustomerIdentification() {
             >
               {identifyMutation.isPending ? "Verificando..." : "Confirmar Identificação"}
             </Button>
+            
+            <div className="mt-4 text-center">
+              <p className="text-sm text-neutral-600 mb-2">Ainda não tem cadastro?</p>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => setLocation(`/events/${id}/register`)}
+              >
+                Novo Cadastro
+              </Button>
+            </div>
           </form>
         </Form>
       </div>

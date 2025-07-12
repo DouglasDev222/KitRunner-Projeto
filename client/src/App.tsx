@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Events from "@/pages/events";
 import EventDetails from "@/pages/event-details";
 import CustomerIdentification from "@/pages/customer-identification";
+import CustomerRegistration from "@/pages/customer-registration";
 import AddressConfirmation from "@/pages/address-confirmation";
 import PartialCost from "@/pages/partial-cost";
 import KitInformation from "@/pages/kit-information";
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/" component={Events} />
       <Route path="/events/:id" component={EventDetails} />
       <Route path="/events/:id/identify" component={CustomerIdentification} />
+      <Route path="/events/:id/register" component={CustomerRegistration} />
       <Route path="/events/:id/address" component={AddressConfirmation} />
       <Route path="/events/:id/cost" component={PartialCost} />
       <Route path="/events/:id/kits" component={KitInformation} />
