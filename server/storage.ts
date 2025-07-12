@@ -139,7 +139,7 @@ export class MemStorage implements IStorage {
 
   async createEvent(insertEvent: InsertEvent): Promise<Event> {
     const id = this.eventId++;
-    const event: Event = { ...insertEvent, id };
+    const event: Event = { ...insertEvent, id, available: insertEvent.available ?? true };
     this.events.set(id, event);
     return event;
   }
@@ -165,6 +165,8 @@ export class MemStorage implements IStorage {
       ...insertOrder, 
       id, 
       orderNumber,
+      status: insertOrder.status ?? "confirmed",
+      additionalCost: insertOrder.additionalCost ?? "0",
       createdAt: new Date()
     };
     this.orders.set(id, order);
