@@ -87,7 +87,7 @@ export default function EventDetails() {
                 <Users className="w-5 h-5 text-primary mr-3" />
                 <div>
                   <p className="font-medium text-neutral-800">Participantes</p>
-                  <p className="text-neutral-600 text-sm">{event.participants.toLocaleString('pt-BR')} inscritos</p>
+                  <p className="text-neutral-600 text-sm">{event.participants?.toLocaleString('pt-BR') || 0} inscritos</p>
                 </div>
               </div>
             </div>

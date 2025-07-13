@@ -1,8 +1,11 @@
+import { useState, useEffect } from "react";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AdminLayout } from "@/components/admin-layout";
+import { AdminAuth } from "@/components/admin-auth";
 import { Users, Package, Calendar, Plus, DollarSign } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +15,16 @@ import type { Customer, Order, Event } from "@shared/schema";
 
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const authStatus = localStorage.getItem("adminAuthenticated");
+    setIsAuthenticated(authStatus === "true");
+  }, []);
+
+  if (!isAuthenticated) {
+    return <AdminAuth onAuthenticated={() => setIsAuthenticated(true)} />;
+  }
 
   const { data: customers, isLoading: customersLoading } = useQuery({
     queryKey: ["admin", "customers"],
@@ -46,22 +59,20 @@ export default function AdminDashboard() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto bg-white min-h-screen">
-      <Header showBackButton onBack={() => setLocation("/")} />
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-neutral-800">Painel Administrativo</h1>
-            <p className="text-neutral-600">Gerencie clientes, pedidos e eventos</p>
-          </div>
-          <Button
-            onClick={() => setLocation("/admin/events/new")}
-            className="bg-primary hover:bg-primary/90"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Evento
-          </Button>
+    <AdminLayout>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-neutral-800">Dashboard</h1>
+          <p className="text-neutral-600">Visão geral do sistema</p>
         </div>
+        <Button
+          onClick={() => setLocation("/admin/events/new")}
+          className="bg-primary hover:bg-primary/90"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Evento
+        </Button>
+      </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -269,7 +280,6 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </div>
+    </AdminLayout>
   );
 }

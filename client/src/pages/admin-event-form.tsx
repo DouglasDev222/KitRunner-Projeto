@@ -1,4 +1,7 @@
+import { useState, useEffect } from "react";
 import { Header } from "@/components/header";
+import { AdminLayout } from "@/components/admin-layout";
+import { AdminAuth } from "@/components/admin-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +28,16 @@ export default function AdminEventForm() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const authStatus = localStorage.getItem("adminAuthenticated");
+    setIsAuthenticated(authStatus === "true");
+  }, []);
+
+  if (!isAuthenticated) {
+    return <AdminAuth onAuthenticated={() => setIsAuthenticated(true)} />;
+  }
 
   const form = useForm<AdminEventCreation>({
     resolver: zodResolver(adminEventCreationSchema),
@@ -73,21 +86,19 @@ export default function AdminEventForm() {
   const watchDonationRequired = form.watch("donationRequired");
 
   return (
-    <div className="max-w-2xl mx-auto bg-white min-h-screen">
-      <Header showBackButton onBack={() => setLocation("/admin")} />
-      <div className="p-4">
-        <div className="flex items-center mb-6">
-          <Calendar className="w-8 h-8 text-primary mr-3" />
-          <div>
-            <h2 className="text-2xl font-bold text-neutral-800">Novo Evento</h2>
-            <p className="text-neutral-600">Adicione um novo evento ao sistema</p>
-          </div>
+    <AdminLayout>
+      <div className="flex items-center mb-6">
+        <Calendar className="w-8 h-8 text-primary mr-3" />
+        <div>
+          <h2 className="text-2xl font-bold text-neutral-800">Novo Evento</h2>
+          <p className="text-neutral-600">Adicione um novo evento ao sistema</p>
         </div>
+      </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Informações do Evento</CardTitle>
-          </CardHeader>
+      <Card>
+        <CardHeader>
+          <CardTitle>Informações do Evento</CardTitle>
+        </CardHeader>
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -344,7 +355,6 @@ export default function AdminEventForm() {
             </Form>
           </CardContent>
         </Card>
-      </div>
-    </div>
+    </AdminLayout>
   );
 }
