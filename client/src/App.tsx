@@ -19,6 +19,8 @@ import OrderDetails from "@/pages/order-details";
 import Profile from "@/pages/profile";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
+import AdminDashboard from "@/pages/admin-dashboard";
+import AdminEventForm from "@/pages/admin-event-form";
 
 function Router() {
   return (
@@ -39,6 +41,8 @@ function Router() {
       <Route path="/profile/address/new" component={NewAddress} />
       <Route path="/profile/address/:id/edit" component={NewAddress} />
       <Route path="/login" component={Login} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/events/new" component={AdminEventForm} />
       <Route component={NotFound} />
     </Switch>
   );

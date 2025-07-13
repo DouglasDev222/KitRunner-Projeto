@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { customerIdentificationSchema, customerRegistrationSchema, orderCreationSchema } from "@shared/schema";
+import { customerIdentificationSchema, customerRegistrationSchema, orderCreationSchema, adminEventCreationSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -323,6 +323,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(kits);
     } catch (error) {
       res.status(500).json({ message: "Erro ao buscar kits do pedido" });
+    }
+  });
+
+  // Admin routes
+  app.get("/api/admin/customers", async (req, res) => {
+    try {
+      const customers = await storage.getAllCustomers();
+      res.json(customers);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/admin/orders", async (req, res) => {
+    try {
+      const orders = await storage.getAllOrders();
+      res.json(orders);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/admin/events", async (req, res) => {
+    try {
+      const events = await storage.getAllEvents();
+      res.json(events);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/admin/stats", async (req, res) => {
+    try {
+      const stats = await storage.getAdminStats();
+      res.json(stats);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/events", async (req, res) => {
+    try {
+      const validatedData = adminEventCreationSchema.parse(req.body);
+      
+      // Convert string prices to proper format
+      const eventData = {
+        ...validatedData,
+        fixedPrice: validatedData.fixedPrice ? validatedData.fixedPrice : null,
+        extraKitPrice: validatedData.extraKitPrice,
+        donationAmount: validatedData.donationAmount ? validatedData.donationAmount : null,
+      };
+
+      const event = await storage.createEvent(eventData);
+      res.json(event);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
     }
   });
 

@@ -6,12 +6,17 @@ export const events = pgTable("events", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   date: text("date").notNull(),
-  time: text("time").notNull(),
   location: text("location").notNull(),
   city: text("city").notNull(),
   state: text("state").notNull(),
-  participants: integer("participants").notNull(),
+  pickupZipCode: text("pickup_zip_code").notNull(), // CEP de retirada
+  fixedPrice: decimal("fixed_price", { precision: 10, scale: 2 }), // Preço fixo opcional
+  extraKitPrice: decimal("extra_kit_price", { precision: 10, scale: 2 }).default("8.00"), // Preço por kit extra
+  donationRequired: boolean("donation_required").default(false), // Se requer doação
+  donationAmount: decimal("donation_amount", { precision: 10, scale: 2 }), // Valor da doação se obrigatória
+  donationDescription: text("donation_description"), // Ex: "1 kg de alimento"
   available: boolean("available").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const customers = pgTable("customers", {
@@ -54,16 +59,35 @@ export const orders = pgTable("orders", {
   customerId: integer("customer_id").notNull(),
   addressId: integer("address_id").notNull().references(() => addresses.id),
   kitQuantity: integer("kit_quantity").notNull(),
-  baseCost: decimal("base_cost", { precision: 10, scale: 2 }).notNull(),
-  additionalCost: decimal("additional_cost", { precision: 10, scale: 2 }).notNull().default("0"),
+  deliveryCost: decimal("delivery_cost", { precision: 10, scale: 2 }).notNull(), // Custo da entrega baseado na distância
+  extraKitsCost: decimal("extra_kits_cost", { precision: 10, scale: 2 }).notNull().default("0"), // Custo dos kits extras
+  donationCost: decimal("donation_cost", { precision: 10, scale: 2 }).notNull().default("0"), // Custo da doação
+  discountAmount: decimal("discount_amount", { precision: 10, scale: 2 }).notNull().default("0"), // Desconto aplicado
+  couponCode: text("coupon_code"), // Código do cupom usado
   totalCost: decimal("total_cost", { precision: 10, scale: 2 }).notNull(),
   paymentMethod: text("payment_method").notNull(),
   status: text("status").notNull().default("confirmed"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Add coupons table
+export const coupons = pgTable("coupons", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  discountType: text("discount_type").notNull(), // "percentage" or "fixed"
+  discountValue: decimal("discount_value", { precision: 10, scale: 2 }).notNull(),
+  maxDiscount: decimal("max_discount", { precision: 10, scale: 2 }), // Para cupons percentuais
+  validFrom: timestamp("valid_from").notNull(),
+  validUntil: timestamp("valid_until").notNull(),
+  usageLimit: integer("usage_limit"), // null = ilimitado
+  usageCount: integer("usage_count").notNull().default(0),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertEventSchema = createInsertSchema(events).omit({
   id: true,
+  createdAt: true,
 });
 
 export const insertCustomerSchema = createInsertSchema(customers).omit({
@@ -83,6 +107,12 @@ export const insertKitSchema = createInsertSchema(kits).omit({
 export const insertOrderSchema = createInsertSchema(orders).omit({
   id: true,
   orderNumber: true,
+  createdAt: true,
+});
+
+export const insertCouponSchema = createInsertSchema(coupons).omit({
+  id: true,
+  usageCount: true,
   createdAt: true,
 });
 
@@ -125,6 +155,22 @@ export const orderCreationSchema = z.object({
   kitQuantity: z.number().min(1).max(5),
   kits: z.array(kitInformationSchema),
   paymentMethod: z.enum(["credit", "debit", "pix"]),
+  couponCode: z.string().optional(),
+});
+
+// Admin schemas
+export const adminEventCreationSchema = z.object({
+  name: z.string().min(1, "Nome do evento é obrigatório"),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD"),
+  location: z.string().min(1, "Local é obrigatório"),
+  city: z.string().min(1, "Cidade é obrigatória"),
+  state: z.string().length(2, "Estado deve ter 2 caracteres"),
+  pickupZipCode: z.string().length(8, "CEP deve ter 8 dígitos"),
+  fixedPrice: z.string().optional(),
+  extraKitPrice: z.string().default("8.00"),
+  donationRequired: z.boolean().default(false),
+  donationAmount: z.string().optional(),
+  donationDescription: z.string().optional(),
 });
 
 export type Event = typeof events.$inferSelect;
@@ -137,8 +183,11 @@ export type Kit = typeof kits.$inferSelect;
 export type InsertKit = z.infer<typeof insertKitSchema>;
 export type Order = typeof orders.$inferSelect;
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type Coupon = typeof coupons.$inferSelect;
+export type InsertCoupon = z.infer<typeof insertCouponSchema>;
 export type CustomerIdentification = z.infer<typeof customerIdentificationSchema>;
 export type CustomerRegistration = z.infer<typeof customerRegistrationSchema>;
 export type AddressData = z.infer<typeof addressSchema>;
 export type KitInformation = z.infer<typeof kitInformationSchema>;
 export type OrderCreation = z.infer<typeof orderCreationSchema>;
+export type AdminEventCreation = z.infer<typeof adminEventCreationSchema>;

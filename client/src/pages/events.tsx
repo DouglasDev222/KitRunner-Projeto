@@ -2,6 +2,7 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -38,8 +39,20 @@ export default function Events() {
     <div className="max-w-md mx-auto bg-white min-h-screen pb-20">
       <Header />
       <div className="p-4">
-        <h2 className="text-2xl font-bold text-neutral-800 mb-2">Próximos Eventos</h2>
-        <p className="text-neutral-600 mb-6">Selecione o evento para retirar seu kit</p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-neutral-800">Próximos Eventos</h2>
+            <p className="text-neutral-600">Selecione o evento para retirar seu kit</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setLocation("/admin")}
+            className="text-xs"
+          >
+            Admin
+          </Button>
+        </div>
         
         <div className="space-y-4">
           {events?.map((event) => (
