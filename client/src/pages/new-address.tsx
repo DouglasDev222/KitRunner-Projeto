@@ -42,7 +42,7 @@ export default function NewAddress() {
       if (!response.ok) return null;
       return response.json();
     },
-    enabled: !!id && id.match(/^\d+$/),
+    enabled: Boolean(id && id.match(/^\d+$/)),
   });
 
   useEffect(() => {

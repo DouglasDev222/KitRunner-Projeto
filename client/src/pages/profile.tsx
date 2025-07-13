@@ -47,6 +47,25 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          <Button
+            variant="outline"
+            className="h-12 flex items-center justify-center gap-2"
+            onClick={() => setLocation("/my-orders")}
+          >
+            <Package className="w-5 h-5" />
+            <span>Pedidos</span>
+          </Button>
+          <Button
+            className="h-12 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90"
+            onClick={() => setLocation("/")}
+          >
+            <Plus className="w-5 h-5" />
+            <span>Fazer Novo Pedido</span>
+          </Button>
+        </div>
+
         {/* User Data Section */}
         <Card className="mb-6">
           <CardHeader>
@@ -145,26 +164,8 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {/* Actions Section */}
+        {/* Logout Section */}
         <div className="space-y-4">
-          <Button
-            variant="outline"
-            className="w-full flex items-center justify-start gap-3 h-12"
-            onClick={() => setLocation("/my-orders")}
-          >
-            <Package className="w-5 h-5" />
-            <span>Meus Pedidos</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            className="w-full flex items-center justify-start gap-3 h-12"
-            onClick={() => setLocation("/")}
-          >
-            <Home className="w-5 h-5" />
-            <span>Fazer Novo Pedido</span>
-          </Button>
-
           <Separator />
 
           <Button
