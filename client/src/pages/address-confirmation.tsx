@@ -14,8 +14,10 @@ import { useLocation, useParams } from "wouter";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { addressSchema, type AddressData, type Address } from "@shared/schema";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatZipCode } from "@/lib/brazilian-formatter";
 import { apiRequest } from "@/lib/queryClient";
+import { z } from "zod";
 
 export default function AddressConfirmation() {
   const [, setLocation] = useLocation();
@@ -38,8 +40,14 @@ export default function AddressConfirmation() {
     enabled: !!customer?.id,
   });
   
-  const form = useForm<AddressData>({
-    resolver: zodResolver(addressSchema),
+  const addressFormSchema = addressSchema.extend({
+    isDefault: z.boolean().optional(),
+  });
+  
+  type AddressFormData = z.infer<typeof addressFormSchema>;
+
+  const form = useForm<AddressFormData>({
+    resolver: zodResolver(addressFormSchema),
     defaultValues: {
       street: "",
       number: "",
@@ -48,7 +56,8 @@ export default function AddressConfirmation() {
       city: "",
       state: "PB",
       zipCode: "",
-      label: "Casa"
+      label: "Casa",
+      isDefault: false,
     },
   });
   
@@ -329,6 +338,26 @@ export default function AddressConfirmation() {
                       />
                     </div>
                     
+                    <FormField
+                      control={form.control}
+                      name="isDefault"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>
+                              Definir como endereço padrão
+                            </FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
                     <div className="flex gap-2">
                       <Button
                         type="submit"
@@ -373,6 +402,18 @@ export default function AddressConfirmation() {
             </CardContent>
           </Card>
         )}
+        
+        {/* Add New Address Button */}
+        <div className="mb-6">
+          <Button 
+            variant="outline"
+            onClick={() => setLocation(`/events/${id}/address/new`)}
+            className="w-full flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Adicionar Novo Endereço
+          </Button>
+        </div>
         
         <Button 
           className="w-full bg-primary text-white hover:bg-primary/90" 

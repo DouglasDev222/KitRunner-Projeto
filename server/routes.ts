@@ -223,26 +223,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get order by number
+  // Create new address
+  app.post("/api/customers/:id/addresses", async (req, res) => {
+    try {
+      const customerId = parseInt(req.params.id);
+      const addressData = req.body;
+      
+      // If setting as default, unset other defaults first
+      if (addressData.isDefault) {
+        const currentAddresses = await storage.getAddressesByCustomerId(customerId);
+        for (const addr of currentAddresses) {
+          if (addr.isDefault) {
+            await storage.updateAddress(addr.id, { isDefault: false });
+          }
+        }
+      }
+      
+      const address = await storage.createAddress({
+        customerId,
+        ...addressData,
+        zipCode: addressData.zipCode.replace(/\D/g, '')
+      });
+      
+      res.json(address);
+    } catch (error) {
+      res.status(500).json({ message: "Erro ao criar endereço" });
+    }
+  });
+
+  // Get customer orders
+  app.get("/api/customers/:id/orders", async (req, res) => {
+    try {
+      const customerId = parseInt(req.params.id);
+      const orders = await storage.getOrdersByCustomerId(customerId);
+      res.json(orders);
+    } catch (error) {
+      res.status(500).json({ message: "Erro ao buscar pedidos" });
+    }
+  });
+
+  // Get order by number with details
   app.get("/api/orders/:orderNumber", async (req, res) => {
     try {
-      const orderNumber = req.params.orderNumber;
+      const { orderNumber } = req.params;
       const order = await storage.getOrderByNumber(orderNumber);
       
       if (!order) {
         return res.status(404).json({ message: "Pedido não encontrado" });
       }
       
-      const kits = await storage.getKitsByOrderId(order.id);
+      // Get related data
       const event = await storage.getEvent(order.eventId);
+      const address = await storage.getAddress(order.addressId);
       
       res.json({
-        order,
-        kits,
-        event
+        ...order,
+        event,
+        address
       });
     } catch (error) {
       res.status(500).json({ message: "Erro ao buscar pedido" });
+    }
+  });
+
+  // Get order kits
+  app.get("/api/orders/:id/kits", async (req, res) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const kits = await storage.getKitsByOrderId(orderId);
+      res.json(kits);
+    } catch (error) {
+      res.status(500).json({ message: "Erro ao buscar kits do pedido" });
     }
   });
 

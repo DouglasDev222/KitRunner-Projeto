@@ -1,4 +1,5 @@
 import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, ChevronRight } from "lucide-react";
@@ -34,7 +35,7 @@ export default function Events() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen">
+    <div className="max-w-md mx-auto bg-white min-h-screen pb-20">
       <Header />
       <div className="p-4">
         <h2 className="text-2xl font-bold text-neutral-800 mb-2">Próximos Eventos</h2>
@@ -75,6 +76,7 @@ export default function Events() {
           ))}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

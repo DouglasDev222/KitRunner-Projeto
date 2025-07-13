@@ -38,6 +38,7 @@ export interface IStorage {
   // Orders
   createOrder(order: InsertOrder): Promise<Order>;
   getOrderByNumber(orderNumber: string): Promise<Order | undefined>;
+  getOrdersByCustomerId(customerId: number): Promise<Order[]>;
 
   // Kits
   createKit(kit: InsertKit): Promise<Kit>;
@@ -128,6 +129,15 @@ export class DatabaseStorage implements IStorage {
       .from(orders)
       .where(eq(orders.orderNumber, orderNumber));
     return order || undefined;
+  }
+
+  async getOrdersByCustomerId(customerId: number): Promise<Order[]> {
+    const result = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.customerId, customerId))
+      .orderBy(orders.createdAt);
+    return result;
   }
 
   async createKit(insertKit: InsertKit): Promise<Kit> {
