@@ -16,11 +16,16 @@ import { customerIdentificationSchema, type CustomerIdentification, type Order, 
 import { formatCPF, isValidCPF } from "@/lib/cpf-validator";
 import { formatCurrency, formatDate } from "@/lib/brazilian-formatter";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/lib/auth-context";
 
 export default function MyOrders() {
   const [, setLocation] = useLocation();
+  const { user, isAuthenticated } = useAuth();
   const [customer, setCustomer] = useState(null);
   const [showOrders, setShowOrders] = useState(false);
+
+  // If user is authenticated, use that, otherwise require login
+  const effectiveCustomer = user || customer;
 
   const form = useForm<CustomerIdentification>({
     resolver: zodResolver(customerIdentificationSchema),
@@ -31,12 +36,12 @@ export default function MyOrders() {
   });
 
   const { data: orders, isLoading: ordersLoading } = useQuery({
-    queryKey: ["orders", customer?.id],
+    queryKey: ["orders", effectiveCustomer?.id],
     queryFn: async () => {
-      const response = await fetch(`/api/customers/${customer.id}/orders`);
+      const response = await fetch(`/api/customers/${effectiveCustomer.id}/orders`);
       return response.json();
     },
-    enabled: !!customer?.id && showOrders,
+    enabled: !!effectiveCustomer?.id && (isAuthenticated || showOrders),
   });
 
   const identifyMutation = useMutation({
@@ -68,7 +73,8 @@ export default function MyOrders() {
     setLocation(`/orders/${orderNumber}`);
   };
 
-  if (showOrders && customer) {
+  // If authenticated, skip login form
+  if (isAuthenticated || (showOrders && customer)) {
     return (
       <div className="max-w-md mx-auto bg-white min-h-screen">
         <Header showBackButton onBack={() => setLocation("/")} />
@@ -76,8 +82,8 @@ export default function MyOrders() {
           <div className="flex items-center mb-6">
             <User className="w-6 h-6 text-primary mr-2" />
             <div>
-              <h2 className="text-xl font-bold text-neutral-800">{customer.name}</h2>
-              <p className="text-sm text-neutral-600">{formatCPF(customer.cpf)}</p>
+              <h2 className="text-xl font-bold text-neutral-800">{effectiveCustomer.name}</h2>
+              <p className="text-sm text-neutral-600">{formatCPF(effectiveCustomer.cpf)}</p>
             </div>
           </div>
 

@@ -37,12 +37,14 @@ Preferred communication style: Simple, everyday language.
 
 #### Core Features
 1. **Event Management**: Browse and view event details
-2. **Customer Identification**: CPF and birth date validation
-3. **Address Confirmation**: Verify delivery address from customer data
-4. **Cost Calculation**: Dynamic pricing based on distance and services
-5. **Kit Configuration**: Multiple kit setup with individual details
-6. **Payment Processing**: Multiple payment methods (credit, debit, PIX)
-7. **Order Confirmation**: Complete order tracking and confirmation
+2. **User Authentication**: Persistent login system with CPF and birth date validation
+3. **Profile Management**: Comprehensive user profile with personal data and address management
+4. **Address Management**: Multiple addresses with default address functionality (only one default per user)
+5. **Cost Calculation**: Dynamic pricing based on distance and services
+6. **Kit Configuration**: Multiple kit setup with individual details
+7. **Payment Processing**: Multiple payment methods (credit, debit, PIX)
+8. **Order Management**: Complete order tracking and history for authenticated users
+9. **Simplified Ordering**: Logged-in users skip identification steps
 
 #### Mobile-First Design
 - Responsive design optimized for mobile devices
@@ -52,13 +54,29 @@ Preferred communication style: Simple, everyday language.
 
 ## Data Flow
 
+### For New Users
 1. **Event Selection**: Customer browses events and selects one
-2. **Customer Authentication**: Identity verification via CPF and birth date
-3. **Address Verification**: Confirm delivery address from customer database
+2. **Customer Authentication**: Identity verification via CPF and birth date or registration
+3. **Address Verification**: Confirm delivery address from customer database or add new
 4. **Cost Calculation**: Calculate delivery costs based on distance
 5. **Kit Configuration**: Configure individual kits with names and sizes
 6. **Payment Processing**: Select payment method and process order
 7. **Order Confirmation**: Generate order confirmation with tracking
+
+### For Authenticated Users
+1. **Event Selection**: Customer browses events and selects one (login persisted)
+2. **Address Confirmation**: Uses saved addresses or add new ones
+3. **Cost Calculation**: Calculate delivery costs based on distance
+4. **Kit Configuration**: Configure individual kits with names and sizes
+5. **Payment Processing**: Select payment method and process order
+6. **Order Confirmation**: Generate order confirmation with tracking
+
+### Profile Management
+- **Login**: Persistent authentication with localStorage
+- **Profile View**: Complete user data display (name, CPF, birth date, phone, email)
+- **Address Management**: Add, edit, delete addresses with default management
+- **Order History**: View all previous orders with details
+- **Logout**: Clear session and return to public flow
 
 ## External Dependencies
 
@@ -113,6 +131,16 @@ Preferred communication style: Simple, everyday language.
 8. **Database-First Storage**: Replaced in-memory storage with persistent PostgreSQL database
 
 ## Recent Changes
+
+### Authentication System Implementation (January 2025)
+- ✓ Added persistent login system with localStorage for session management
+- ✓ Created comprehensive profile page with user data and address management
+- ✓ Implemented proper address default management (only one default per user)
+- ✓ Added login/logout functionality with auth context provider
+- ✓ Enhanced address editing with isDefault checkbox functionality
+- ✓ Updated My Orders to work with authenticated users
+- ✓ Simplified order flow for logged-in users (skip CPF/birth date entry)
+- ✓ Added footer with easy access to Profile and My Orders from events page
 
 ### Database Integration (December 2024)
 - ✓ Added PostgreSQL database with Neon Database provider

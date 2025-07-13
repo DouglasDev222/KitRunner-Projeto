@@ -117,11 +117,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get address by ID
+  app.get("/api/addresses/:id", async (req, res) => {
+    try {
+      const addressId = parseInt(req.params.id);
+      const address = await storage.getAddress(addressId);
+      
+      if (!address) {
+        return res.status(404).json({ message: "Endereço não encontrado" });
+      }
+      
+      res.json(address);
+    } catch (error) {
+      res.status(500).json({ message: "Erro ao buscar endereço" });
+    }
+  });
+
   // Update address
   app.put("/api/addresses/:id", async (req, res) => {
     try {
       const addressId = parseInt(req.params.id);
       const updateData = req.body;
+      
+      // If setting as default, unset other defaults first
+      if (updateData.isDefault) {
+        const currentAddress = await storage.getAddress(addressId);
+        if (currentAddress) {
+          const addresses = await storage.getAddressesByCustomerId(currentAddress.customerId);
+          for (const addr of addresses) {
+            if (addr.isDefault && addr.id !== addressId) {
+              await storage.updateAddress(addr.id, { isDefault: false });
+            }
+          }
+        }
+      }
       
       const address = await storage.updateAddress(addressId, updateData);
       res.json(address);

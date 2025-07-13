@@ -10,14 +10,24 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { customerIdentificationSchema, type CustomerIdentification, type Customer } from "@shared/schema";
 import { formatCPF, isValidCPF } from "@/lib/cpf-validator";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/lib/auth-context";
 
 export default function CustomerIdentification() {
   const [, setLocation] = useLocation();
   const { id } = useParams<{ id: string }>();
+  const { user, isAuthenticated } = useAuth();
+
+  // If user is already authenticated, skip to address confirmation
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      sessionStorage.setItem("customerData", JSON.stringify(user));
+      setLocation(`/events/${id}/address`);
+    }
+  }, [isAuthenticated, user, id, setLocation]);
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<CustomerIdentification>({
