@@ -43,8 +43,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             return (
               <li key={item.href}>
                 <Link href={item.href}>
-                  <a
-                    className={`flex items-center p-3 rounded-lg transition-colors ${
+                  <div
+                    className={`flex items-center p-3 rounded-lg transition-colors cursor-pointer ${
                       isActive 
                         ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-700' 
                         : 'text-gray-600 hover:bg-gray-50'
@@ -53,7 +53,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   >
                     <Icon className="w-5 h-5 mr-3" />
                     {item.label}
-                  </a>
+                  </div>
                 </Link>
               </li>
             );

@@ -110,6 +110,20 @@ export default function AddressConfirmation() {
       label: address.label
     });
     setIsEditing(false);
+    
+    // Store address and calculate delivery costs
+    sessionStorage.setItem('selectedAddress', JSON.stringify(address));
+    
+    // Mock delivery calculation - would be replaced with real API
+    const mockDeliveryPrice = Math.random() * 20 + 10; // Random between 10-30
+    const mockDistance = Math.random() * 15 + 5; // Random between 5-20 km
+    
+    const calculatedCosts = {
+      deliveryPrice: Number(mockDeliveryPrice.toFixed(2)),
+      distance: Number(mockDistance.toFixed(1))
+    };
+    
+    sessionStorage.setItem('calculatedCosts', JSON.stringify(calculatedCosts));
   };
   
   const handleEditAddress = () => {

@@ -1,10 +1,12 @@
 import { Header } from "@/components/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Users, Truck, Clock, Shield } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Calendar, MapPin, Users, Truck, Clock, Shield, Heart, DollarSign } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { formatDateTime } from "@/lib/brazilian-formatter";
+import { formatDateTime, formatCurrency } from "@/lib/brazilian-formatter";
 import type { Event } from "@shared/schema";
 
 export default function EventDetails() {
@@ -95,7 +97,7 @@ export default function EventDetails() {
         </Card>
 
         {/* KitRunner Service */}
-        <Card className="mb-6">
+        <Card className="mb-4">
           <CardContent className="p-4">
             <h3 className="font-semibold text-lg text-neutral-800 mb-3">Serviço KitRunner</h3>
             <div className="space-y-3">
@@ -123,6 +125,63 @@ export default function EventDetails() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Pricing Information */}
+        <Card className="mb-4">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-lg text-neutral-800">Informações de Preço</h3>
+              <DollarSign className="w-5 h-5 text-primary" />
+            </div>
+            
+            {event.fixedPrice ? (
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <Badge variant="secondary" className="mb-2">Preço Fixo</Badge>
+                <p className="text-2xl font-bold text-primary mb-2">{formatCurrency(Number(event.fixedPrice))}</p>
+                <p className="text-sm text-neutral-600">
+                  Preço único que inclui todos os serviços de retirada e entrega
+                </p>
+                {event.extraKitPrice && (
+                  <p className="text-xs text-neutral-500 mt-2">
+                    Kits adicionais: {formatCurrency(Number(event.extraKitPrice))} cada
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-neutral-600">Taxa base de retirada:</span>
+                  <span className="font-medium">R$ 15,00</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-neutral-600">Entrega (varia por distância):</span>
+                  <span className="font-medium">A partir de R$ 10,00</span>
+                </div>
+                {event.extraKitPrice && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-600">Kits adicionais:</span>
+                    <span className="font-medium">{formatCurrency(Number(event.extraKitPrice))} cada</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Donation Information */}
+        {event.donationRequired && (
+          <Alert className="mb-4 border-red-200 bg-red-50">
+            <Heart className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              <span className="font-medium">Doação obrigatória:</span> {event.donationDescription}
+              {event.donationAmount && (
+                <span className="block mt-1">
+                  Valor: {formatCurrency(Number(event.donationAmount))}
+                </span>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Button 
           className="w-full bg-primary text-white hover:bg-primary/90" 

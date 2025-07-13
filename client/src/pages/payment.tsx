@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CreditCard, Landmark, QrCode, Shield, Lock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CreditCard, Landmark, QrCode, Shield, Lock, Heart } from "lucide-react";
 import { useLocation, useParams } from "wouter";
 import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -68,10 +69,21 @@ export default function Payment() {
     );
   }
 
-  const baseCost = 33.50;
-  const additionalKitCost = 8.00;
+  // Get calculated costs from session storage
+  const calculatedCosts = JSON.parse(sessionStorage.getItem('calculatedCosts') || '{}');
+  
+  const pickupCost = 15.00;
+  const deliveryCost = calculatedCosts.deliveryPrice || 18.50;
+  const extraKitPrice = Number(event.extraKitPrice || 8);
+  const donationValue = event?.donationAmount ? Number(event.donationAmount) : 0;
+  const fixedPrice = event?.fixedPrice ? Number(event.fixedPrice) : null;
+  
   const extraKits = Math.max(0, kitData.kitQuantity - 1);
-  const totalCost = baseCost + (extraKits * additionalKitCost);
+  const extraKitsCost = extraKits * extraKitPrice;
+  
+  // Calculate total based on event pricing model
+  const baseCost = fixedPrice || (pickupCost + deliveryCost + donationValue);
+  const totalCost = baseCost + extraKitsCost;
 
   const handleFinishOrder = () => {
     if (!selectedAddress) {
@@ -117,6 +129,49 @@ export default function Payment() {
                   {selectedAddress ? `${selectedAddress.neighborhood}, ${selectedAddress.city}` : "Endereço não selecionado"}
                 </span>
               </div>
+              
+              {/* Pricing Breakdown */}
+              <div className="border-t pt-3 mt-3">
+                <h4 className="font-medium text-neutral-800 mb-2">Detalhamento</h4>
+                
+                {fixedPrice ? (
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center">
+                      <Badge variant="secondary" className="mr-2 text-xs">Preço Fixo</Badge>
+                      <span className="text-neutral-600">Kit base (inclui todos os serviços)</span>
+                    </div>
+                    <span className="font-medium text-neutral-800">{formatCurrency(fixedPrice)}</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-neutral-600">Retirada do kit</span>
+                      <span className="font-medium text-neutral-800">{formatCurrency(pickupCost)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-neutral-600">Entrega ({calculatedCosts.distance || 12.5} km)</span>
+                      <span className="font-medium text-neutral-800">{formatCurrency(deliveryCost)}</span>
+                    </div>
+                    {event?.donationRequired && (
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <Heart className="w-3 h-3 text-red-500 mr-1" />
+                          <span className="text-neutral-600">Doação: {event.donationDescription}</span>
+                        </div>
+                        <span className="font-medium text-neutral-800">{formatCurrency(donationValue)}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+                
+                {extraKits > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-neutral-600">{extraKits} kit{extraKits > 1 ? 's' : ''} adicional{extraKits > 1 ? 'is' : ''}</span>
+                    <span className="font-medium text-neutral-800">{formatCurrency(extraKitsCost)}</span>
+                  </div>
+                )}
+              </div>
+              
               <div className="border-t pt-2 mt-3">
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-lg text-neutral-800">Total</span>

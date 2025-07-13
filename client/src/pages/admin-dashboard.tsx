@@ -22,10 +22,6 @@ export default function AdminDashboard() {
     setIsAuthenticated(authStatus === "true");
   }, []);
 
-  if (!isAuthenticated) {
-    return <AdminAuth onAuthenticated={() => setIsAuthenticated(true)} />;
-  }
-
   const { data: customers, isLoading: customersLoading } = useQuery({
     queryKey: ["admin", "customers"],
     queryFn: async () => {
@@ -57,6 +53,10 @@ export default function AdminDashboard() {
       return response.json();
     },
   });
+
+  if (!isAuthenticated) {
+    return <AdminAuth onAuthenticated={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <AdminLayout>

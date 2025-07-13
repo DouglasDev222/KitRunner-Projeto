@@ -35,10 +35,6 @@ export default function AdminEventForm() {
     setIsAuthenticated(authStatus === "true");
   }, []);
 
-  if (!isAuthenticated) {
-    return <AdminAuth onAuthenticated={() => setIsAuthenticated(true)} />;
-  }
-
   const form = useForm<AdminEventCreation>({
     resolver: zodResolver(adminEventCreationSchema),
     defaultValues: {
@@ -84,6 +80,10 @@ export default function AdminEventForm() {
   };
 
   const watchDonationRequired = form.watch("donationRequired");
+
+  if (!isAuthenticated) {
+    return <AdminAuth onAuthenticated={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <AdminLayout>
