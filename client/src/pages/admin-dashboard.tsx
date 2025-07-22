@@ -150,7 +150,7 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {customers?.map((customer: Customer) => (
+                    {(customers || []).map((customer: Customer) => (
                       <div key={customer.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex-1">
                           <h3 className="font-medium text-neutral-800">{customer.name}</h3>
@@ -186,7 +186,7 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {orders?.map((order: Order & { customer: Customer; event: Event }) => (
+                    {(orders || []).map((order: Order & { customer: Customer; event: Event }) => (
                       <div key={order.id} className="p-4 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {events?.map((event: Event) => (
+                    {(events || []).map((event: Event) => (
                       <div key={event.id} className="p-4 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="font-medium text-neutral-800">{event.name}</h3>

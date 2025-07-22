@@ -261,4 +261,143 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Mock implementation for development without database
+class MockStorage implements IStorage {
+  private events: Event[] = [
+    {
+      id: 1,
+      name: "Maratona de São Paulo 2024",
+      date: new Date("2024-12-15"),
+      time: "06:00:00",
+      location: "Parque do Ibirapuera",
+      city: "São Paulo",
+      state: "SP",
+      zipCode: "04094-050",
+      participants: 25000,
+      available: true,
+      fixedPrice: null,
+      extraKitPrice: "8.00",
+      donationRequired: false,
+      donationDescription: null,
+      donationAmount: null,
+      createdAt: new Date("2024-01-15T10:00:00Z"),
+      updatedAt: new Date("2024-01-15T10:00:00Z")
+    }
+  ];
+  
+  private customers: Customer[] = [];
+  private addresses: Address[] = [];
+  private orders: (Order & { customer: Customer; event: Event })[] = [];
+
+  async getEvents(): Promise<Event[]> {
+    return this.events;
+  }
+
+  async getEvent(id: number): Promise<Event | undefined> {
+    return this.events.find(e => e.id === id);
+  }
+
+  async createEvent(event: InsertEvent): Promise<Event> {
+    const newEvent = { ...event, id: Date.now(), createdAt: new Date(), updatedAt: new Date() } as Event;
+    this.events.push(newEvent);
+    return newEvent;
+  }
+
+  async getCustomerByCredentials(cpf: string, birthDate: string): Promise<Customer | undefined> {
+    return this.customers.find(c => c.cpf === cpf && c.birthDate === birthDate);
+  }
+
+  async createCustomer(customer: InsertCustomer): Promise<Customer> {
+    const newCustomer = { ...customer, id: Date.now(), createdAt: new Date(), updatedAt: new Date() } as Customer;
+    this.customers.push(newCustomer);
+    return newCustomer;
+  }
+
+  async createAddress(address: InsertAddress): Promise<Address> {
+    const newAddress = { ...address, id: Date.now(), createdAt: new Date(), updatedAt: new Date() } as Address;
+    this.addresses.push(newAddress);
+    return newAddress;
+  }
+
+  async getAddressesByCustomerId(customerId: number): Promise<Address[]> {
+    return this.addresses.filter(a => a.customerId === customerId);
+  }
+
+  async getAddress(id: number): Promise<Address | undefined> {
+    return this.addresses.find(a => a.id === id);
+  }
+
+  async updateAddress(id: number, addressData: Partial<InsertAddress>): Promise<Address> {
+    const index = this.addresses.findIndex(a => a.id === id);
+    if (index === -1) throw new Error("Address not found");
+    
+    this.addresses[index] = { ...this.addresses[index], ...addressData, updatedAt: new Date() };
+    return this.addresses[index];
+  }
+
+  async createOrder(order: InsertOrder): Promise<Order> {
+    const newOrder = { 
+      ...order, 
+      id: Date.now(), 
+      orderNumber: `ORD-${Date.now()}`,
+      status: "confirmed" as const,
+      createdAt: new Date(), 
+      updatedAt: new Date() 
+    } as Order;
+    return newOrder;
+  }
+
+  async getOrderByNumber(orderNumber: string): Promise<Order | undefined> {
+    return this.orders.find(o => o.orderNumber === orderNumber);
+  }
+
+  async getOrdersByCustomerId(customerId: number): Promise<Order[]> {
+    return this.orders.filter(o => o.customerId === customerId);
+  }
+
+  async createKit(kit: InsertKit): Promise<Kit> {
+    const newKit = { ...kit, id: Date.now(), createdAt: new Date(), updatedAt: new Date() } as Kit;
+    return newKit;
+  }
+
+  async getKitsByOrderId(orderId: number): Promise<Kit[]> {
+    return [];
+  }
+
+  async getAllCustomers(): Promise<Customer[]> {
+    return this.customers;
+  }
+
+  async getAllOrders(): Promise<(Order & { customer: Customer; event: Event })[]> {
+    return this.orders;
+  }
+
+  async getAllEvents(): Promise<Event[]> {
+    return this.events;
+  }
+
+  async getAdminStats(): Promise<{ totalCustomers: number; totalOrders: number; activeEvents: number; totalRevenue: number; }> {
+    return {
+      totalCustomers: this.customers.length,
+      totalOrders: this.orders.length,
+      activeEvents: this.events.filter(e => e.available).length,
+      totalRevenue: this.orders.reduce((sum, o) => sum + Number(o.totalCost), 0)
+    };
+  }
+
+  async getCouponByCode(code: string): Promise<Coupon | undefined> {
+    return undefined;
+  }
+
+  async createCoupon(coupon: InsertCoupon): Promise<Coupon> {
+    const newCoupon = { ...coupon, id: Date.now(), createdAt: new Date(), updatedAt: new Date() } as Coupon;
+    return newCoupon;
+  }
+
+  async calculateDeliveryPrice(fromZipCode: string, toZipCode: string): Promise<number> {
+    return 15.50;
+  }
+}
+
+// Temporarily use mock storage if database is not available
+export const storage = new MockStorage();
