@@ -94,7 +94,7 @@ export class DatabaseStorage implements IStorage {
   async updateEvent(id: number, eventData: Partial<InsertEvent>): Promise<Event | undefined> {
     const [event] = await db
       .update(events)
-      .set({ ...eventData, updatedAt: new Date() })
+      .set(eventData)
       .where(eq(events.id, id))
       .returning();
     return event || undefined;
@@ -104,7 +104,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(events)
       .where(eq(events.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   async getOrdersByEventId(eventId: number): Promise<(Order & { customer: Customer })[]> {
@@ -116,11 +116,15 @@ export class DatabaseStorage implements IStorage {
         customerId: orders.customerId,
         addressId: orders.addressId,
         kitQuantity: orders.kitQuantity,
-        baseCost: orders.baseCost,
-        additionalCost: orders.additionalCost,
+        deliveryCost: orders.deliveryCost,
+        extraKitsCost: orders.extraKitsCost,
+        donationCost: orders.donationCost,
+        discountAmount: orders.discountAmount,
+        couponCode: orders.couponCode,
         totalCost: orders.totalCost,
         paymentMethod: orders.paymentMethod,
         status: orders.status,
+        donationAmount: orders.donationAmount,
         createdAt: orders.createdAt,
         customer: customers,
       })
@@ -323,21 +327,18 @@ class MockStorage implements IStorage {
     {
       id: 1,
       name: "Maratona de São Paulo 2024",
-      date: new Date("2024-12-15"),
-      time: "06:00:00",
+      date: "2024-12-15",
       location: "Parque do Ibirapuera",
       city: "São Paulo",
       state: "SP",
-      zipCode: "04094-050",
-      participants: 25000,
-      available: true,
+      pickupZipCode: "04094050",
       fixedPrice: null,
       extraKitPrice: "8.00",
       donationRequired: false,
       donationDescription: null,
       donationAmount: null,
-      createdAt: new Date("2024-01-15T10:00:00Z"),
-      updatedAt: new Date("2024-01-15T10:00:00Z")
+      available: true,
+      createdAt: new Date("2024-01-15T10:00:00Z")
     }
   ];
   
@@ -355,7 +356,7 @@ class MockStorage implements IStorage {
   }
 
   async createEvent(event: InsertEvent): Promise<Event> {
-    const newEvent = { ...event, id: Date.now(), createdAt: new Date(), updatedAt: new Date() } as Event;
+    const newEvent = { ...event, id: Date.now(), createdAt: new Date() } as Event;
     this.events.push(newEvent);
     return newEvent;
   }
@@ -364,7 +365,7 @@ class MockStorage implements IStorage {
     const index = this.events.findIndex(e => e.id === id);
     if (index === -1) return undefined;
     
-    this.events[index] = { ...this.events[index], ...eventData, updatedAt: new Date() };
+    this.events[index] = { ...this.events[index], ...eventData };
     return this.events[index];
   }
 
@@ -393,13 +394,13 @@ class MockStorage implements IStorage {
   }
 
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
-    const newCustomer = { ...customer, id: Date.now(), createdAt: new Date(), updatedAt: new Date() } as Customer;
+    const newCustomer = { ...customer, id: Date.now(), createdAt: new Date() } as Customer;
     this.customers.push(newCustomer);
     return newCustomer;
   }
 
   async createAddress(address: InsertAddress): Promise<Address> {
-    const newAddress = { ...address, id: Date.now(), createdAt: new Date(), updatedAt: new Date() } as Address;
+    const newAddress = { ...address, id: Date.now(), createdAt: new Date() } as Address;
     this.addresses.push(newAddress);
     return newAddress;
   }
@@ -416,7 +417,7 @@ class MockStorage implements IStorage {
     const index = this.addresses.findIndex(a => a.id === id);
     if (index === -1) throw new Error("Address not found");
     
-    this.addresses[index] = { ...this.addresses[index], ...addressData, updatedAt: new Date() };
+    this.addresses[index] = { ...this.addresses[index], ...addressData };
     return this.addresses[index];
   }
 
@@ -482,7 +483,12 @@ class MockStorage implements IStorage {
   }
 
   async createCoupon(coupon: InsertCoupon): Promise<Coupon> {
-    const newCoupon = { ...coupon, id: Date.now(), createdAt: new Date(), updatedAt: new Date() } as Coupon;
+    const newCoupon = { 
+      ...coupon, 
+      id: Date.now(), 
+      usageCount: 0,
+      createdAt: new Date()
+    } as Coupon;
     return newCoupon;
   }
 

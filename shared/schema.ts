@@ -173,3 +173,24 @@ export const adminEventCreationSchema = z.object({
   donationAmount: z.string().optional(),
   donationDescription: z.string().optional(),
 });
+
+// Type exports
+export type Event = typeof events.$inferSelect;
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+
+export type Customer = typeof customers.$inferSelect;
+export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
+
+export type Address = typeof addresses.$inferSelect;
+export type InsertAddress = z.infer<typeof insertAddressSchema>;
+
+export type Kit = typeof kits.$inferSelect;
+export type InsertKit = z.infer<typeof insertKitSchema>;
+
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+
+export type Coupon = typeof coupons.$inferSelect;
+export type InsertCoupon = z.infer<typeof insertCouponSchema>;
+
+export type CustomerIdentification = z.infer<typeof customerIdentificationSchema>;
