@@ -127,8 +127,11 @@ export default function KitInformation() {
                               <Input
                                 placeholder="000.000.000-00"
                                 {...field}
-                                onChange={(e) => handleCPFChange(e.target.value, index)}
-                                maxLength={14}
+                                value={formatCPF(field.value)}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/\D/g, "");
+                                  field.onChange(value);
+                                }}
                               />
                             </FormControl>
                             <FormMessage />

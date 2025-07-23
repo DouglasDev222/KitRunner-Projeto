@@ -1,14 +1,9 @@
 export function isValidCPF(cpf: string): boolean {
   // Remove all non-digit characters
-  const cleanCPF = cpf.replace(/\D/g, '');
+  const cleanCPF = cpf.replace(/\D/g, "");
   
   // Check if has 11 digits
   if (cleanCPF.length !== 11) {
-    return false;
-  }
-  
-  // Check if all digits are the same
-  if (/^(\d)\1{10}$/.test(cleanCPF)) {
     return false;
   }
   
@@ -34,14 +29,19 @@ export function isValidCPF(cpf: string): boolean {
 }
 
 export function formatCPF(cpf: string): string {
-  const cleanCPF = cpf.replace(/\D/g, '');
+  const cleanCPF = cpf.replace(/\D/g, "");
   
-  if (cleanCPF.length <= 11) {
-    return cleanCPF
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  if (cleanCPF.length <= 3) {
+    return cleanCPF;
+  } else if (cleanCPF.length <= 6) {
+    return cleanCPF.replace(/(\d{3})(\d+)/, "$1.$2");
+  } else if (cleanCPF.length <= 9) {
+    return cleanCPF.replace(/(\d{3})(\d{3})(\d+)/, "$1.$2.$3");
+  } else if (cleanCPF.length <= 11) {
+    return cleanCPF.replace(/(\d{3})(\d{3})(\d{3})(\d+)/, "$1.$2.$3-$4");
   }
   
-  return cleanCPF.slice(0, 11).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  return cleanCPF.slice(0, 11).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 }
+
+

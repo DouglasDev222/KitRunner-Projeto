@@ -67,6 +67,7 @@ export const orders = pgTable("orders", {
   totalCost: decimal("total_cost", { precision: 10, scale: 2 }).notNull(),
   paymentMethod: text("payment_method").notNull(),
   status: text("status").notNull().default("confirmed"),
+  donationAmount: decimal("donation_amount", { precision: 10, scale: 2 }).notNull().default("0"), // Valor da doação
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -117,8 +118,8 @@ export const insertCouponSchema = createInsertSchema(coupons).omit({
 });
 
 export const customerIdentificationSchema = z.object({
-  cpf: z.string().min(11, "CPF deve ter 11 dígitos"),
-  birthDate: z.string().min(1, "Data de nascimento é obrigatória"),
+  cpf: z.string().length(11, "CPF deve ter 11 dígitos numéricos"),
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data de nascimento deve estar no formato YYYY-MM-DD"),
 });
 
 export const addressSchema = z.object({
@@ -135,8 +136,8 @@ export const addressSchema = z.object({
 
 export const customerRegistrationSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
-  cpf: z.string().min(11, "CPF deve ter 11 dígitos"),
-  birthDate: z.string().min(1, "Data de nascimento é obrigatória"),
+  cpf: z.string().length(11, "CPF deve ter 11 dígitos numéricos"),
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data de nascimento deve estar no formato YYYY-MM-DD"),
   email: z.string().email("Email inválido"),
   phone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
   addresses: z.array(addressSchema).min(1, "Pelo menos um endereço é obrigatório"),
@@ -144,7 +145,7 @@ export const customerRegistrationSchema = z.object({
 
 export const kitInformationSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
-  cpf: z.string().min(11, "CPF deve ter 11 dígitos"),
+  cpf: z.string().length(11, "CPF deve ter 11 dígitos numéricos"),
   shirtSize: z.string().min(1, "Tamanho da camiseta é obrigatório"),
 });
 
@@ -172,22 +173,3 @@ export const adminEventCreationSchema = z.object({
   donationAmount: z.string().optional(),
   donationDescription: z.string().optional(),
 });
-
-export type Event = typeof events.$inferSelect;
-export type InsertEvent = z.infer<typeof insertEventSchema>;
-export type Customer = typeof customers.$inferSelect;
-export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
-export type Address = typeof addresses.$inferSelect;
-export type InsertAddress = z.infer<typeof insertAddressSchema>;
-export type Kit = typeof kits.$inferSelect;
-export type InsertKit = z.infer<typeof insertKitSchema>;
-export type Order = typeof orders.$inferSelect;
-export type InsertOrder = z.infer<typeof insertOrderSchema>;
-export type Coupon = typeof coupons.$inferSelect;
-export type InsertCoupon = z.infer<typeof insertCouponSchema>;
-export type CustomerIdentification = z.infer<typeof customerIdentificationSchema>;
-export type CustomerRegistration = z.infer<typeof customerRegistrationSchema>;
-export type AddressData = z.infer<typeof addressSchema>;
-export type KitInformation = z.infer<typeof kitInformationSchema>;
-export type OrderCreation = z.infer<typeof orderCreationSchema>;
-export type AdminEventCreation = z.infer<typeof adminEventCreationSchema>;

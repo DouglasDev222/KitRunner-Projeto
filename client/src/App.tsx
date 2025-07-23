@@ -21,6 +21,8 @@ import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminEventForm from "@/pages/admin-event-form";
+import AdminEvents from "@/pages/admin-events";
+import AdminEventEdit from "@/pages/admin-event-edit";
 
 function Router() {
   return (
@@ -42,7 +44,9 @@ function Router() {
       <Route path="/profile/address/:id/edit" component={NewAddress} />
       <Route path="/login" component={Login} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/events" component={AdminEvents} />
       <Route path="/admin/events/new" component={AdminEventForm} />
+      <Route path="/admin/events/:id/edit" component={AdminEventEdit} />
       <Route component={NotFound} />
     </Switch>
   );

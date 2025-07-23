@@ -63,14 +63,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const registrationData = customerRegistrationSchema.parse(req.body);
       
       // Check if customer already exists
-      const existingCustomer = await storage.getCustomerByCredentials(
-        registrationData.cpf, 
-        registrationData.birthDate
-      );
+      const existingCustomer = await storage.getCustomerByCPF(registrationData.cpf.replace(/\D/g, ''));
       
       if (existingCustomer) {
         return res.status(409).json({ 
-          message: "Cliente já cadastrado com este CPF e data de nascimento" 
+          message: "Cliente já cadastrado com este CPF." 
         });
       }
       
@@ -164,27 +161,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { customerId, eventId, kitQuantity } = req.body;
       
-      const customer = await storage.getCustomerByCredentials("", "");
       const event = await storage.getEvent(eventId);
       
-      if (!customer || !event) {
-        return res.status(404).json({ message: "Cliente ou evento não encontrado" });
+      if (!event) {
+        return res.status(404).json({ message: "Evento não encontrado" });
       }
-      
-      const baseCost = 33.50;
-      const additionalKitCost = 8.00;
-      const extraKits = Math.max(0, kitQuantity - 1);
-      const totalCost = baseCost + (extraKits * additionalKitCost);
+
+      let totalCost = 0;
+      let baseCost = 0;
+      let additionalKitCost = 0;
+      let donationAmount = 0;
+
+      if (event.fixedPrice) {
+        baseCost = Number(event.fixedPrice);
+      } else {
+        // TODO: Implement dynamic delivery cost calculation based on address
+        baseCost = 33.50; // Placeholder for now
+      }
+
+      if (kitQuantity > 1 && event.extraKitPrice) {
+        additionalKitCost = (kitQuantity - 1) * Number(event.extraKitPrice);
+      }
+
+      if (event.donationRequired && event.donationAmount) {
+        donationAmount = Number(event.donationAmount);
+      }
+
+      totalCost = baseCost + additionalKitCost + donationAmount;
       
       res.json({
         baseCost,
         additionalKitCost,
-        extraKits,
+        donationAmount,
         totalCost,
         breakdown: {
-          pickup: 15.00,
-          delivery: 18.50,
-          additionalKits: extraKits * additionalKitCost
+          pickup: baseCost, // Simplified for now
+          delivery: 0, // Placeholder
+          additionalKits: additionalKitCost,
+          donation: donationAmount
         }
       });
     } catch (error) {
@@ -196,13 +210,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/orders", async (req, res) => {
     try {
       const orderData = orderCreationSchema.parse(req.body);
-      
-      // Calculate costs
-      const baseCost = 33.50;
-      const additionalKitCost = 8.00;
-      const extraKits = Math.max(0, orderData.kitQuantity - 1);
-      const additionalCost = extraKits * additionalKitCost;
-      const totalCost = baseCost + additionalCost;
+      const selectedEvent = await storage.getEvent(orderData.eventId);
+      if (!selectedEvent) {
+        return res.status(404).json({ message: "Evento não encontrado" });
+      }
+
+      let totalCost = 0;
+      let baseCost = 0;
+      let additionalCost = 0;
+      let donationAmount = 0;
+
+      if (selectedEvent.fixedPrice) {
+        baseCost = Number(selectedEvent.fixedPrice);
+      } else {
+        // TODO: Implement dynamic delivery cost calculation based on address
+        baseCost = 33.50; // Placeholder for now
+      }
+
+      if (orderData.kitQuantity > 1 && selectedEvent.extraKitPrice) {
+        additionalCost = (orderData.kitQuantity - 1) * Number(selectedEvent.extraKitPrice);
+      }
+
+      if (selectedEvent.donationRequired && selectedEvent.donationAmount) {
+        donationAmount = Number(selectedEvent.donationAmount);
+      }
+
+      totalCost = baseCost + additionalCost + donationAmount;
       
       // Create order
       const order = await storage.createOrder({
@@ -210,11 +243,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerId: orderData.customerId,
         addressId: orderData.addressId,
         kitQuantity: orderData.kitQuantity,
-        baseCost: baseCost.toString(),
-        additionalCost: additionalCost.toString(),
+        deliveryCost: baseCost.toString(),
+        extraKitsCost: additionalCost.toString(),
+        donationCost: donationAmount.toString(),
+        discountAmount: "0",
         totalCost: totalCost.toString(),
         paymentMethod: orderData.paymentMethod,
-        status: "confirmed"
+        status: "confirmed",
+        donationAmount: donationAmount.toString(),
       });
       
       // Create kits
@@ -223,22 +259,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const kit = await storage.createKit({
           orderId: order.id,
           name: kitData.name,
-          cpf: kitData.cpf.replace(/\D/g, ''),
+          cpf: kitData.cpf.replace(/\D/g, ""),
           shirtSize: kitData.shirtSize
         });
         kits.push(kit);
       }
       
       // Get event details for response
-      const event = await storage.getEvent(orderData.eventId);
       
       res.json({
         order,
         kits,
-        event,
+        event: selectedEvent,
         deliveryEstimate: {
-          eventDate: event?.date,
-          deliveryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          eventDate: selectedEvent?.date,
+          deliveryDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
         }
       });
     } catch (error) {
@@ -370,9 +405,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Convert string prices to proper format
       const eventData = {
         ...validatedData,
-        fixedPrice: validatedData.fixedPrice ? validatedData.fixedPrice : null,
-        extraKitPrice: validatedData.extraKitPrice,
-        donationAmount: validatedData.donationAmount ? validatedData.donationAmount : null,
+        fixedPrice: validatedData.fixedPrice ? parseFloat(validatedData.fixedPrice) : null,
+        extraKitPrice: validatedData.extraKitPrice ? parseFloat(validatedData.extraKitPrice) : parseFloat("8.00"),
+        donationAmount: validatedData.donationAmount ? parseFloat(validatedData.donationAmount) : null,
       };
 
       const event = await storage.createEvent(eventData);
@@ -382,6 +417,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get single event for admin
+  app.get("/api/admin/events/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const event = await storage.getEvent(id);
+      
+      if (!event) {
+        return res.status(404).json({ message: "Evento não encontrado" });
+      }
+      
+      res.json(event);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Update event
+  app.put("/api/admin/events/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      // Convert date format if needed
+      if (updateData.date && !updateData.date.includes('T')) {
+        updateData.date = updateData.date + 'T00:00:00.000Z';
+      }
+      
+      const event = await storage.updateEvent(id, updateData);
+      
+      if (!event) {
+        return res.status(404).json({ message: "Evento não encontrado" });
+      }
+      
+      res.json(event);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Toggle event availability
+  app.patch("/api/admin/events/:id/toggle", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { available } = req.body;
+      
+      const event = await storage.updateEvent(id, { available });
+      
+      if (!event) {
+        return res.status(404).json({ message: "Evento não encontrado" });
+      }
+      
+      res.json(event);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get orders for a specific event
+  app.get("/api/admin/events/:id/orders", async (req, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      const orders = await storage.getOrdersByEventId(eventId);
+      res.json(orders);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Delete event (optional - for complete CRUD)
+  app.delete("/api/admin/events/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Check if event has orders
+      const orders = await storage.getOrdersByEventId(id);
+      if (orders.length > 0) {
+        return res.status(400).json({ 
+          message: "Não é possível excluir evento com pedidos associados" 
+        });
+      }
+      
+      const success = await storage.deleteEvent(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Evento não encontrado" });
+      }
+      
+      res.json({ message: "Evento excluído com sucesso" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
+

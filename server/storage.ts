@@ -30,6 +30,7 @@ export interface IStorage {
 
   // Customers
   getCustomerByCredentials(cpf: string, birthDate: string): Promise<Customer | undefined>;
+  getCustomerByCPF(cpf: string): Promise<Customer | undefined>;
   createCustomer(customer: InsertCustomer): Promise<Customer>;
 
   // Addresses
@@ -64,6 +65,11 @@ export interface IStorage {
   
   // Price calculation
   calculateDeliveryPrice(fromZipCode: string, toZipCode: string): Promise<number>;
+
+  // Additional methods needed for event administration
+  updateEvent(id: number, eventData: Partial<InsertEvent>): Promise<Event | undefined>;
+  deleteEvent(id: number): Promise<boolean>;
+  getOrdersByEventId(eventId: number): Promise<(Order & { customer: Customer })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -85,12 +91,62 @@ export class DatabaseStorage implements IStorage {
     return event;
   }
 
+  async updateEvent(id: number, eventData: Partial<InsertEvent>): Promise<Event | undefined> {
+    const [event] = await db
+      .update(events)
+      .set({ ...eventData, updatedAt: new Date() })
+      .where(eq(events.id, id))
+      .returning();
+    return event || undefined;
+  }
+
+  async deleteEvent(id: number): Promise<boolean> {
+    const result = await db
+      .delete(events)
+      .where(eq(events.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getOrdersByEventId(eventId: number): Promise<(Order & { customer: Customer })[]> {
+    const result = await db
+      .select({
+        id: orders.id,
+        orderNumber: orders.orderNumber,
+        eventId: orders.eventId,
+        customerId: orders.customerId,
+        addressId: orders.addressId,
+        kitQuantity: orders.kitQuantity,
+        baseCost: orders.baseCost,
+        additionalCost: orders.additionalCost,
+        totalCost: orders.totalCost,
+        paymentMethod: orders.paymentMethod,
+        status: orders.status,
+        createdAt: orders.createdAt,
+        customer: customers,
+      })
+      .from(orders)
+      .leftJoin(customers, eq(orders.customerId, customers.id))
+      .where(eq(orders.eventId, eventId))
+      .orderBy(desc(orders.createdAt));
+      
+    return result as (Order & { customer: Customer })[];
+  }
+
   async getCustomerByCredentials(cpf: string, birthDate: string): Promise<Customer | undefined> {
-    const cleanCpf = cpf.replace(/\D/g, '');
+    const cleanCpf = cpf.replace(/\D/g, "");
     const result = await db
       .select()
       .from(customers)
       .where(and(eq(customers.cpf, cleanCpf), eq(customers.birthDate, birthDate)));
+    return result[0] || undefined;
+  }
+
+  async getCustomerByCPF(cpf: string): Promise<Customer | undefined> {
+    const cleanCpf = cpf.replace(/\D/g, "");
+    const result = await db
+      .select()
+      .from(customers)
+      .where(eq(customers.cpf, cleanCpf));
     return result[0] || undefined;
   }
 
@@ -288,6 +344,7 @@ class MockStorage implements IStorage {
   private customers: Customer[] = [];
   private addresses: Address[] = [];
   private orders: (Order & { customer: Customer; event: Event })[] = [];
+  private kits: Kit[] = [];
 
   async getEvents(): Promise<Event[]> {
     return this.events;
@@ -303,8 +360,36 @@ class MockStorage implements IStorage {
     return newEvent;
   }
 
+  async updateEvent(id: number, eventData: Partial<InsertEvent>): Promise<Event | undefined> {
+    const index = this.events.findIndex(e => e.id === id);
+    if (index === -1) return undefined;
+    
+    this.events[index] = { ...this.events[index], ...eventData, updatedAt: new Date() };
+    return this.events[index];
+  }
+
+  async deleteEvent(id: number): Promise<boolean> {
+    const index = this.events.findIndex(e => e.id === id);
+    if (index === -1) return false;
+    
+    this.events.splice(index, 1);
+    return true;
+  }
+
+  async getOrdersByEventId(eventId: number): Promise<(Order & { customer: Customer })[]> {
+    return this.orders.filter(o => o.eventId === eventId);
+  }
+
   async getCustomerByCredentials(cpf: string, birthDate: string): Promise<Customer | undefined> {
     return this.customers.find(c => c.cpf === cpf && c.birthDate === birthDate);
+  }
+
+  async getCustomerByCPF(cpf: string): Promise<Customer | undefined> {
+    return this.customers.find(c => c.cpf === cpf);
+  }
+
+  async getCustomer(id: number): Promise<Customer | undefined> {
+    return this.customers.find(c => c.id === id);
   }
 
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
@@ -344,6 +429,12 @@ class MockStorage implements IStorage {
       createdAt: new Date(), 
       updatedAt: new Date() 
     } as Order;
+    
+    // Para a MockStorage, precisamos simular a adição de customer e event
+    const customer = await this.getCustomer(newOrder.customerId);
+    const event = await this.getEvent(newOrder.eventId);
+
+    this.orders.push({ ...newOrder, customer, event } as Order & { customer: Customer; event: Event });
     return newOrder;
   }
 
@@ -357,11 +448,12 @@ class MockStorage implements IStorage {
 
   async createKit(kit: InsertKit): Promise<Kit> {
     const newKit = { ...kit, id: Date.now(), createdAt: new Date(), updatedAt: new Date() } as Kit;
+    this.kits.push(newKit);
     return newKit;
   }
 
   async getKitsByOrderId(orderId: number): Promise<Kit[]> {
-    return [];
+    return this.kits.filter(k => k.orderId === orderId);
   }
 
   async getAllCustomers(): Promise<Customer[]> {
@@ -399,5 +491,5 @@ class MockStorage implements IStorage {
   }
 }
 
-// Temporarily use mock storage if database is not available
-export const storage = new MockStorage();
+export const storage = new DatabaseStorage();
+

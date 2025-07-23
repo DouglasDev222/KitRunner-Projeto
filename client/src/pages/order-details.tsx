@@ -124,7 +124,7 @@ export default function OrderDetails() {
                 ))}
               </div>
             ) : (
-              <p className="text-neutral-600">Carregando informações dos kits...</p>
+              <p className="text-neutral-600">Nenhum kit encontrado para este pedido.</p>
             )}
           </CardContent>
         </Card>

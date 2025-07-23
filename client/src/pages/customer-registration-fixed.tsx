@@ -136,9 +136,8 @@ export default function CustomerRegistration() {
                         <FormLabel>CPF</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="000.000.000-00"
+                            placeholder="00000000000"
                             {...field}
-                            value={formatCPF(field.value)}
                             onChange={(e) => {
                               const value = e.target.value.replace(/\D/g, "");
                               field.onChange(value);

@@ -15,6 +15,13 @@ export default function EventDetails() {
 
   const { data: event, isLoading } = useQuery<Event>({
     queryKey: ["/api/events", id],
+    queryFn: async () => {
+      const response = await fetch(`/api/events/${id}`);
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    },
   });
 
   if (isLoading) {
