@@ -29,14 +29,13 @@ export default function PartialCost() {
     if (costs) setCalculatedCosts(JSON.parse(costs));
   }, []);
 
-  const pickupCost = 15.00;
   const deliveryCost = calculatedCosts?.deliveryPrice || 18.50;
   const distance = calculatedCosts?.distance || 12.5;
   const fixedPrice = event?.fixedPrice ? Number(event.fixedPrice) : null;
   const donationValue = event?.donationAmount ? Number(event.donationAmount) : 0;
   
   // Calculate total considering fixed price or individual components
-  const totalCost = fixedPrice || (pickupCost + deliveryCost + donationValue);
+  const totalCost = fixedPrice || (deliveryCost + donationValue);
 
   const handleContinue = () => {
     setLocation(`/events/${id}/kits`);
@@ -71,8 +70,8 @@ export default function PartialCost() {
               ) : (
                 <>
                   <div className="flex justify-between items-center">
-                    <span className="text-neutral-600">Retirada do Kit</span>
-                    <span className="font-semibold text-neutral-800">{formatCurrency(pickupCost)}</span>
+                    <span className="text-neutral-600">Entrega ({distance} km)</span>
+                    <span className="font-semibold text-neutral-800">{formatCurrency(deliveryCost)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-neutral-600">Entrega ({distance.toFixed(1)} km)</span>

@@ -79,7 +79,7 @@ export default function EventDetails() {
                 <Calendar className="w-5 h-5 text-primary mr-3" />
                 <div>
                   <p className="font-medium text-neutral-800">Data</p>
-                  <p className="text-neutral-600 text-sm">{formatDateTime(event.date, event.time)}</p>
+                  <p className="text-neutral-600 text-sm">{event.date}</p>
                 </div>
               </div>
               <div className="flex items-center">
@@ -90,13 +90,6 @@ export default function EventDetails() {
                     {event.location}<br />
                     {event.city} - {event.state}
                   </p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Users className="w-5 h-5 text-primary mr-3" />
-                <div>
-                  <p className="font-medium text-neutral-800">Participantes</p>
-                  <p className="text-neutral-600 text-sm">{event.participants?.toLocaleString('pt-BR') || 0} inscritos</p>
                 </div>
               </div>
             </div>

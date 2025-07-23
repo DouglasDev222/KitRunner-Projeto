@@ -172,11 +172,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let additionalKitCost = 0;
       let donationAmount = 0;
 
+      let deliveryCost = 0;
+      
       if (event.fixedPrice) {
         baseCost = Number(event.fixedPrice);
       } else {
-        // TODO: Implement dynamic delivery cost calculation based on address
-        baseCost = 33.50; // Placeholder for now
+        // Calculate delivery cost based on distance - simplified for now
+        deliveryCost = 18.50; // Default delivery cost
+        baseCost = deliveryCost;
       }
 
       if (kitQuantity > 1 && event.extraKitPrice) {
@@ -191,14 +194,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         baseCost,
+        deliveryCost,
         additionalKitCost,
         donationAmount,
         totalCost,
         breakdown: {
-          pickup: baseCost, // Simplified for now
-          delivery: 0, // Placeholder
+          delivery: deliveryCost,
           additionalKits: additionalKitCost,
-          donation: donationAmount
+          donation: donationAmount,
+          fixedPrice: event.fixedPrice ? Number(event.fixedPrice) : null
         }
       });
     } catch (error) {
@@ -217,14 +221,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let totalCost = 0;
       let baseCost = 0;
+      let deliveryCost = 0;
       let additionalCost = 0;
       let donationAmount = 0;
 
       if (selectedEvent.fixedPrice) {
         baseCost = Number(selectedEvent.fixedPrice);
       } else {
-        // TODO: Implement dynamic delivery cost calculation based on address
-        baseCost = 33.50; // Placeholder for now
+        // Calculate delivery cost based on distance - simplified for now  
+        deliveryCost = 18.50; // Default delivery cost
+        baseCost = deliveryCost;
       }
 
       if (orderData.kitQuantity > 1 && selectedEvent.extraKitPrice) {

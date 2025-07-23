@@ -72,7 +72,6 @@ export default function Payment() {
   // Get calculated costs from session storage
   const calculatedCosts = JSON.parse(sessionStorage.getItem('calculatedCosts') || '{}');
   
-  const pickupCost = 15.00;
   const deliveryCost = calculatedCosts.deliveryPrice || 18.50;
   const extraKitPrice = Number(event.extraKitPrice || 8);
   const donationValue = event?.donationAmount ? Number(event.donationAmount) : 0;
@@ -82,7 +81,7 @@ export default function Payment() {
   const extraKitsCost = extraKits * extraKitPrice;
   
   // Calculate total based on event pricing model
-  const baseCost = fixedPrice || (pickupCost + deliveryCost + donationValue);
+  const baseCost = fixedPrice || (deliveryCost + donationValue);
   const totalCost = baseCost + extraKitsCost;
 
   const handleFinishOrder = () => {
@@ -144,10 +143,6 @@ export default function Payment() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex justify-between items-center">
-                      <span className="text-neutral-600">Retirada do kit</span>
-                      <span className="font-medium text-neutral-800">{formatCurrency(pickupCost)}</span>
-                    </div>
                     <div className="flex justify-between items-center">
                       <span className="text-neutral-600">Entrega ({calculatedCosts.distance || 12.5} km)</span>
                       <span className="font-medium text-neutral-800">{formatCurrency(deliveryCost)}</span>

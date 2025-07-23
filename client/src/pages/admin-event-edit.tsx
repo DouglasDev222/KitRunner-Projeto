@@ -7,9 +7,10 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AdminLayout } from "@/components/admin-layout";
 import { AdminAuth } from "@/components/admin-auth";
 import { ArrowLeft, Save } from "lucide-react";
@@ -19,18 +20,16 @@ import type { Event } from "@shared/schema";
 const eventSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   date: z.string().min(1, "Data é obrigatória"),
-  time: z.string().min(1, "Horário é obrigatório"),
   location: z.string().min(1, "Local é obrigatório"),
   city: z.string().min(1, "Cidade é obrigatória"),
   state: z.string().min(1, "Estado é obrigatório"),
-  description: z.string().optional(),
-  maxParticipants: z.number().min(1, "Máximo de participantes deve ser maior que 0"),
-  available: z.boolean(),
-  fixedPrice: z.number().optional(),
-  donationRequired: z.boolean(),
+  pickupZipCode: z.string().min(8, "CEP é obrigatório"),
+  fixedPrice: z.string().optional(),
+  extraKitPrice: z.string().default("8.00"),
+  donationRequired: z.boolean().default(false),
+  donationAmount: z.string().optional(),
   donationDescription: z.string().optional(),
-  couponCode: z.string().optional(),
-  couponDiscount: z.number().optional(),
+  available: z.boolean().default(true),
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -74,19 +73,17 @@ export default function AdminEventEdit() {
     if (event) {
       reset({
         name: event.name,
-        date: event.date.split('T')[0], // Convert to YYYY-MM-DD format
-        time: event.time,
+        date: event.date,
         location: event.location,
         city: event.city,
         state: event.state,
-        description: event.description || "",
-        maxParticipants: event.maxParticipants,
-        available: event.available,
-        fixedPrice: event.fixedPrice ? Number(event.fixedPrice) : undefined,
-        donationRequired: event.donationRequired,
+        pickupZipCode: event.pickupZipCode,
+        fixedPrice: event.fixedPrice || "",
+        extraKitPrice: event.extraKitPrice || "8.00",
+        donationRequired: event.donationRequired || false,
+        donationAmount: event.donationAmount || "",
         donationDescription: event.donationDescription || "",
-        couponCode: event.couponCode || "",
-        couponDiscount: event.couponDiscount ? Number(event.couponDiscount) : undefined,
+        available: event.available,
       });
     }
   }, [event, reset]);
@@ -159,202 +156,277 @@ export default function AdminEventEdit() {
           <CardTitle>Informações do Evento</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome do Evento *</Label>
-                <Input
-                  id="name"
-                  {...register("name")}
-                  placeholder="Ex: Maratona de São Paulo 2024"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome do Evento</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Maratona de São Paulo 2024" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.name && (
-                  <p className="text-sm text-red-600">{errors.name.message}</p>
-                )}
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="maxParticipants">Máximo de Participantes *</Label>
-                <Input
-                  id="maxParticipants"
-                  type="number"
-                  {...register("maxParticipants", { valueAsNumber: true })}
-                  placeholder="1000"
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data do Evento</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.maxParticipants && (
-                  <p className="text-sm text-red-600">{errors.maxParticipants.message}</p>
-                )}
-              </div>
-            </div>
 
-            {/* Date and Time */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="date">Data *</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  {...register("date")}
+                <FormField
+                  control={form.control}
+                  name="location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Local do Evento</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Parque do Ibirapuera" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                {errors.date && (
-                  <p className="text-sm text-red-600">{errors.date.message}</p>
-                )}
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="time">Horário *</Label>
-                <Input
-                  id="time"
-                  type="time"
-                  {...register("time")}
-                />
-                {errors.time && (
-                  <p className="text-sm text-red-600">{errors.time.message}</p>
-                )}
-              </div>
-            </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cidade</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: São Paulo" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            {/* Location */}
-            <div className="space-y-2">
-              <Label htmlFor="location">Local *</Label>
-              <Input
-                id="location"
-                {...register("location")}
-                placeholder="Ex: Parque do Ibirapuera"
-              />
-              {errors.location && (
-                <p className="text-sm text-red-600">{errors.location.message}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="city">Cidade *</Label>
-                <Input
-                  id="city"
-                  {...register("city")}
-                  placeholder="São Paulo"
-                />
-                {errors.city && (
-                  <p className="text-sm text-red-600">{errors.city.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="state">Estado *</Label>
-                <Input
-                  id="state"
-                  {...register("state")}
-                  placeholder="SP"
-                />
-                {errors.state && (
-                  <p className="text-sm text-red-600">{errors.state.message}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                {...register("description")}
-                placeholder="Descrição detalhada do evento..."
-                rows={4}
-              />
-            </div>
-
-            {/* Pricing */}
-            <div className="space-y-2">
-              <Label htmlFor="fixedPrice">Preço Fixo (R$)</Label>
-              <Input
-                id="fixedPrice"
-                type="number"
-                step="0.01"
-                {...register("fixedPrice", { valueAsNumber: true })}
-                placeholder="0.00"
-              />
-              <p className="text-sm text-neutral-600">
-                Deixe em branco para usar cálculo dinâmico baseado na distância
-              </p>
-            </div>
-
-            {/* Donation */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="donationRequired"
-                  {...register("donationRequired")}
-                  onCheckedChange={(checked) => setValue("donationRequired", checked)}
-                />
-                <Label htmlFor="donationRequired">Doação Obrigatória</Label>
-              </div>
-
-              {donationRequired && (
-                <div className="space-y-2">
-                  <Label htmlFor="donationDescription">Descrição da Doação</Label>
-                  <Textarea
-                    id="donationDescription"
-                    {...register("donationDescription")}
-                    placeholder="Ex: 1kg de alimento não perecível"
-                    rows={2}
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estado</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"].map((state) => (
+                              <SelectItem key={state} value={state}>
+                                {state}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-              )}
-            </div>
 
-            {/* Coupon */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="couponCode">Código do Cupom</Label>
-                <Input
-                  id="couponCode"
-                  {...register("couponCode")}
-                  placeholder="DESCONTO10"
+                <FormField
+                  control={form.control}
+                  name="pickupZipCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CEP de Retirada</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="00000000"
+                          maxLength={8}
+                          {...field}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, "");
+                            field.onChange(value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        CEP onde os kits serão retirados (somente números)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="couponDiscount">Desconto (%)</Label>
-                <Input
-                  id="couponDiscount"
-                  type="number"
-                  step="0.01"
-                  {...register("couponDiscount", { valueAsNumber: true })}
-                  placeholder="10.00"
+              {/* Pricing Information */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-semibold">Configuração de Preços</h3>
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="fixedPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preço Fixo (Opcional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="0.00"
+                          type="number"
+                          step="0.01"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Se definido, será usado como preço base ao invés do cálculo por distância
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="extraKitPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preço por Kit Extra</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="8.00"
+                          type="number"
+                          step="0.01"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Valor cobrado por cada kit adicional além do primeiro
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-            </div>
 
-            {/* Availability */}
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="available"
-                {...register("available")}
-                onCheckedChange={(checked) => setValue("available", checked)}
+              {/* Donation Configuration */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-lg font-semibold">Configuração de Doação</h3>
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="donationRequired"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          Doação Obrigatória
+                        </FormLabel>
+                        <FormDescription>
+                          Marque se este evento exige uma doação
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                {donationRequired && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="donationAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Valor da Doação</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="10.00"
+                              type="number"
+                              step="0.01"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="donationDescription"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Descrição da Doação</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Ex: 1 kg de alimento não perecível"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+              </div>
+
+              {/* Event Status */}
+              <FormField
+                control={form.control}
+                name="available"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Evento Disponível
+                      </FormLabel>
+                      <FormDescription>
+                        Controla se o evento aparece para os usuários
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
               />
-              <Label htmlFor="available">Evento Disponível</Label>
-            </div>
 
-            {/* Submit Button */}
-            <div className="flex justify-end gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setLocation("/admin/events")}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={updateEventMutation.isPending}
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {updateEventMutation.isPending ? "Salvando..." : "Salvar Alterações"}
-              </Button>
-            </div>
-          </form>
+              {/* Submit Button */}
+              <div className="flex justify-end">
+                <Button 
+                  type="submit" 
+                  disabled={updateEventMutation.isPending}
+                  className="min-w-32"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {updateEventMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </AdminLayout>
