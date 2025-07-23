@@ -132,6 +132,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### Pricing Structure Overhaul & Data Consistency (January 2025)
+- ✓ Complete pricing structure overhaul - removed pickup base costs (R$ 15.00) from all calculations
+- ✓ Updated server-side pricing logic to use delivery costs instead of pickup costs
+- ✓ Fixed client-side pricing displays in payment and kit information screens
+- ✓ Replaced obsolete event edit form with standardized structure matching creation form
+- ✓ Added proper form validation and field alignment with current database schema
+- ✓ Cleaned event details page by removing non-existent fields (time, participants)
+- ✓ Fixed date formatting to display properly in Brazilian format (DD/MM/YYYY)
+- ✓ Enhanced pricing breakdown to separate retirada (pickup) and entrega (delivery) costs
+- ✓ Added donation display integration in order summaries
+- ✓ Resolved all TypeScript errors and improved type safety across pricing components
+
 ### Admin Dashboard Implementation (January 2025)
 - ✓ Complete database schema migration with new pricing model
 - ✓ Added comprehensive admin dashboard with responsive design for mobile/desktop

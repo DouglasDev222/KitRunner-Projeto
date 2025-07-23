@@ -11,6 +11,7 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, useParams } from "wouter";
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { kitInformationSchema, type KitInformation } from "@shared/schema";
 import { formatCPF } from "@/lib/cpf-validator";
