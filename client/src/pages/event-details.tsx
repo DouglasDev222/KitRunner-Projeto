@@ -79,7 +79,7 @@ export default function EventDetails() {
                 <Calendar className="w-5 h-5 text-primary mr-3" />
                 <div>
                   <p className="font-medium text-neutral-800">Data</p>
-                  <p className="text-neutral-600 text-sm">{event.date}</p>
+                  <p className="text-neutral-600 text-sm">{new Date(event.date).toLocaleDateString('pt-BR')}</p>
                 </div>
               </div>
               <div className="flex items-center">

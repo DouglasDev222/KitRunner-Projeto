@@ -194,3 +194,7 @@ export type Coupon = typeof coupons.$inferSelect;
 export type InsertCoupon = z.infer<typeof insertCouponSchema>;
 
 export type CustomerIdentification = z.infer<typeof customerIdentificationSchema>;
+export type KitInformation = z.infer<typeof kitInformationSchema>;
+export type OrderCreation = z.infer<typeof orderCreationSchema>;
+export type CustomerRegistration = z.infer<typeof customerRegistrationSchema>;
+export type AdminEventCreation = z.infer<typeof adminEventCreationSchema>;

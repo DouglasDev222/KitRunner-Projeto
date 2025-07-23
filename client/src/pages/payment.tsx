@@ -12,7 +12,18 @@ import { useMutation } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/brazilian-formatter";
 import { apiRequest } from "@/lib/queryClient";
-import type { Customer, Event, OrderCreation, Address } from "@shared/schema";
+import { orderCreationSchema } from "@shared/schema";
+import type { Customer, Event, Address } from "@shared/schema";
+
+type OrderCreation = {
+  eventId: number;
+  customerId: number;
+  addressId: number;
+  kitQuantity: number;
+  kits: { name: string; cpf: string; shirtSize: string }[];
+  paymentMethod: "credit" | "debit" | "pix";
+  couponCode?: string;
+};
 
 export default function Payment() {
   const [, setLocation] = useLocation();
@@ -143,12 +154,16 @@ export default function Payment() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-neutral-600">Retirada do Kit</span>
+                      <span className="font-medium text-neutral-800">Incluído</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-1">
                       <span className="text-neutral-600">Entrega ({calculatedCosts.distance || 12.5} km)</span>
                       <span className="font-medium text-neutral-800">{formatCurrency(deliveryCost)}</span>
                     </div>
                     {event?.donationRequired && (
-                      <div className="flex justify-between items-center">
+                      <div className="flex justify-between items-center mb-1">
                         <div className="flex items-center">
                           <Heart className="w-3 h-3 text-red-500 mr-1" />
                           <span className="text-neutral-600">Doação: {event.donationDescription}</span>

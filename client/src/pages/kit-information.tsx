@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Heart } from "lucide-react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, useParams } from "wouter";
@@ -49,10 +51,21 @@ export default function KitInformation() {
     form.setValue("kitQuantity", selectedQuantity);
   }, [selectedQuantity, replace, form]);
 
-  const baseCost = 33.50;
-  const additionalKitCost = 8.00;
+  const { data: event } = useQuery<any>({
+    queryKey: ["/api/events", id],
+  });
+
+  // Get session data
+  const customer = JSON.parse(sessionStorage.getItem("customerData") || "{}");
+  const selectedAddress = JSON.parse(sessionStorage.getItem("selectedAddress") || "{}");
+  const calculatedCosts = JSON.parse(sessionStorage.getItem("calculatedCosts") || "{}");
+
+  // Calculate costs
+  const baseCost = event?.fixedPrice ? Number(event.fixedPrice) : calculatedCosts.totalCost || 18.50;
+  const additionalKitCost = Number(event?.extraKitPrice || 8.00);
   const extraKits = Math.max(0, selectedQuantity - 1);
-  const totalCost = baseCost + (extraKits * additionalKitCost);
+  const donationAmount = event?.donationRequired ? Number(event.donationAmount || 0) : 0;
+  const totalCost = baseCost + (extraKits * additionalKitCost) + donationAmount;
 
   const onSubmit = (data: KitFormData) => {
     // Store kit data in sessionStorage for next steps
@@ -166,10 +179,35 @@ export default function KitInformation() {
               <CardContent className="p-4">
                 <h3 className="font-semibold text-lg text-neutral-800 mb-3">Resumo do Pedido</h3>
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-neutral-600">Retirada e Entrega (1 kit)</span>
-                    <span className="font-semibold text-neutral-800">{formatCurrency(baseCost)}</span>
-                  </div>
+                  {event?.fixedPrice ? (
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center">
+                        <Badge variant="secondary" className="mr-2 text-xs">Preço Fixo</Badge>
+                        <span className="text-neutral-600">Kit base (inclui todos os serviços)</span>
+                      </div>
+                      <span className="font-semibold text-neutral-800">{formatCurrency(Number(event.fixedPrice))}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-neutral-600">Retirada do Kit</span>
+                        <span className="font-semibold text-neutral-800">Incluído</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-neutral-600">Entrega</span>
+                        <span className="font-semibold text-neutral-800">{formatCurrency(baseCost)}</span>
+                      </div>
+                      {event?.donationRequired && (
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <Heart className="w-3 h-3 text-red-500 mr-1" />
+                            <span className="text-neutral-600">Doação: {event.donationDescription}</span>
+                          </div>
+                          <span className="font-semibold text-neutral-800">{formatCurrency(Number(event.donationAmount || 0))}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
                   {extraKits > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-neutral-600">Kits adicionais ({extraKits} x {formatCurrency(additionalKitCost)})</span>
